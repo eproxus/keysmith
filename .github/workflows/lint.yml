@@ -1,0 +1,44 @@
+---
+name: Project lint
+"on":
+  - push
+jobs:
+  ci:
+    name: Project lint
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      # uses .markdownlint.yml for configuration
+      - name: markdownlint
+        # yamllint disable-line
+        uses: DavidAnson/markdownlint-cli2-action@b4c9feab76d8025d1e83c653fa3990936df0e6c8 # v16.0.0
+        with:
+          globs: |
+            .github/**/*.md
+            *.md
+      - name: yamllint
+        # yamllint disable-line
+        uses: ibiqlik/action-yamllint@2576378a8e339169678f9939646ee3ee325e845c # v3.1.1
+        with:
+          file_or_dir: |
+            .github/**/*.yml
+            .*.yml
+          strict: true
+          config_file: .yamllint.yml
+
+      - name: actionlint
+        # yamllint disable-line
+        uses: reviewdog/action-actionlint@4f8f9963ca57a41e5fd5b538dd79dbfbd3e0b38a # v1.54.0
+        env:
+          SHELLCHECK_OPTS: -o all
+
+      - name: action-sh-checker
+        # yamllint disable-line
+        uses: luizm/action-sh-checker@c6edb3de93e904488b413636d96c6a56e3ad671a # v0.8.0
+        env:
+          SHELLCHECK_OPTS: -o all
+          SHFMT_OPTS: -i 4 -d

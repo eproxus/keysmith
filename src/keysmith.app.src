@@ -1,0 +1,19 @@
+{application, keysmith, [
+    {description, "A library for generating unique references"},
+    {vsn, semver},
+    {applications, [
+        kernel,
+        stdlib
+    ]},
+    {licenses, ["MIT"]},
+    {links, [
+        {
+            "Changelog",
+            "https://github.com/eproxus/keysmith/blob/main/CHANGELOG.md"
+        },
+        {
+            "GitHub",
+            "https://github.com/eproxus/keysmith"
+        }
+    ]}
+]}.

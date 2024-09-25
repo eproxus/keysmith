@@ -1,0 +1,42 @@
+---
+name: Erlang CI
+"on":
+  - push
+jobs:
+  ci:
+    name: Erlang CI
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout code
+        # yamllint disable-line
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Install Erlang
+        # yamllint disable-line
+        uses: erlef/setup-beam@b9c58b0450cd832ccdb3c17cc156a47065d2114f # v1.18.1
+        id: setup-beam
+        with:
+          version-file: .tool-versions
+          version-type: strict
+
+      - name: Restore/save from/to cache
+        # yamllint disable-line
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: |
+            _build
+            ~/.cache/rebar3
+            !_build/test/logs
+          key: "cache-for\
+                -os-${{runner.os}}\
+                -otp-${{steps.setup-beam.outputs.otp-version}}\
+                -rebar3-${{steps.setup-beam.outputs.rebar3-version}}\
+                -hash-${{hashFiles('rebar.lock', 'rebar.config')}}"
+
+      - name: Check formatting
+        run: rebar3 fmt --check
+
+      - name: Continuous Integration
+        run: rebar3 as test ci
