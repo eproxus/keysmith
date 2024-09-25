@@ -38,7 +38,7 @@ jobs:
 
       - name: action-sh-checker
         # yamllint disable-line
-        uses: luizm/action-sh-checker@c6edb3de93e904488b413636d96c6a56e3ad671a # v0.8.0
+        uses: luizm/action-sh-checker@17bd25a6ee188d2b91f677060038f4ba37ba14b2 # v0.9.0
         env:
           SHELLCHECK_OPTS: -o all
           SHFMT_OPTS: -i 4 -d
