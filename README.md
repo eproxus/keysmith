@@ -1,7 +1,4 @@
-# keysmith [![Erlang CI][ci-img]][ci]
-
-[ci]:     https://github.com/eproxus/keysmith/actions/workflows/erlang.yml
-[ci-img]: https://github.com/eproxus/keysmith/actions/workflows/erlang.yml/badge.svg
+# keysmith [![CI Status][ci-img]][ci] [![Lint Status][lint-img]][lint] [![Hex.pm Version][hex-img]][hex]
 
 Keysmith is a well tested and performant library for generating unique
 identifiers. Keysmith currently supports the following formats:
@@ -86,7 +83,8 @@ to the module documentation.
 
 ## Changelog
 
-See the [Releases](https://github.com/eproxus/keysmith/releases) page.
+See [CHANGELOG](https://github.com/eproxus/keysmith/blob/main/CHANGELOG.md) or
+the [Releases](https://github.com/eproxus/keysmith/releases) page.
 
 ## Code of Conduct
 
@@ -126,3 +124,10 @@ This project adheres to
 ### License
 
 This project uses the [MIT License](LICENSE.md).
+
+[ci]:       https://github.com/eproxus/keysmith/actions/workflows/erlang.yml
+[ci-img]:   https://img.shields.io/github/actions/workflow/status/eproxus/keysmith/erlang.yml?label=ci
+[lint]:     https://github.com/eproxus/keysmith/actions/workflows/lint.yml
+[lint-img]: https://img.shields.io/github/actions/workflow/status/eproxus/keysmith/lint.yml?label=lint
+[hex]:      https://hex.pm/packages/keysmith
+[hex-img]:  https://img.shields.io/hexpm/v/keysmith
