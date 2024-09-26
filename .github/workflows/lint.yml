@@ -24,9 +24,6 @@ jobs:
         # yamllint disable-line
         uses: ibiqlik/action-yamllint@2576378a8e339169678f9939646ee3ee325e845c # v3.1.1
         with:
-          file_or_dir: |
-            .github/**/*.yml
-            .*.yml
           strict: true
           config_file: .yamllint.yml
 
