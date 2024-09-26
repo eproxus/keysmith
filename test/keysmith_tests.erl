@@ -165,3 +165,15 @@ cb32_test_() ->
 -dialyzer({nowarn_function, parse_invalid_type_test/0}).
 parse_invalid_type_test() ->
     ?assertError({invalid_id_type, foo}, keysmith:parse(foo, <<"foo">>)).
+
+spec_invalid_test_() ->
+    {ok, JSON} = file:read_file("test/fixtures/type_id/spec/invalid.json"),
+    IDs = json:decode(JSON),
+    [
+        {Desc,
+            ?_assertError(
+                {invalid_id, type_id, ID},
+                keysmith:parse(type_id, ID)
+            )}
+     || #{~"name" := _Name, ~"typeid" := ID, ~"description" := Desc} <- IDs
+    ].

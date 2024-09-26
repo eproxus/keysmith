@@ -305,11 +305,17 @@ This fuction raises the following exceptions:
     (Type :: type_id, TypeID :: type_id()) -> type_id_spec().
 parse(type_id, TypeID) ->
     case string:split(TypeID, <<$_>>, trailing) of
+        [<<>>, _ID] ->
+            error({invalid_id, type_id, TypeID});
         [Tag, ID] when byte_size(ID) == 26 ->
             {AtomTag, UUID} =
                 try
-                    <<0:2, UUIDBin:128/bits>> = cb32_decode(ID),
-                    {binary_to_existing_atom(Tag), UUIDBin}
+                    case cb32_decode(ID) of
+                        <<0:2, UUIDBin:128/bits>> ->
+                            {binary_to_existing_atom(Tag), UUIDBin};
+                        _Other ->
+                            error({invalid_id, type_id, TypeID})
+                    end
                 catch
                     error:badarg -> error({invalid_id, type_id, TypeID})
                 end,
