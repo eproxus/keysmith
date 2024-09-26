@@ -13,11 +13,11 @@ cd "${GIT_ROOT}"
 
 # Update or add the subtree
 if [ -d "${SUBTREE_PREFIX}" ]; then
-  echo "Updating existing subtree..."
-  git subtree pull --prefix "${SUBTREE_PREFIX}" "${REMOTE_REPO}" "${REMOTE_REF}" --squash
+    echo "Updating existing subtree..."
+    git subtree pull --prefix "${SUBTREE_PREFIX}" "${REMOTE_REPO}" "${REMOTE_REF}" --squash
 else
-  echo "Adding new subtree..."
-  git subtree add --prefix "${SUBTREE_PREFIX}" "${REMOTE_REPO}" "${REMOTE_REF}" --squash
+    echo "Adding new subtree..."
+    git subtree add --prefix "${SUBTREE_PREFIX}" "${REMOTE_REPO}" "${REMOTE_REF}" --squash
 fi
 
 # Navigate to the subtree directory
