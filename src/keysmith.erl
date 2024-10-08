@@ -6,11 +6,13 @@ KeySmith is a library for generating unique IDs. It supports two types of
 IDs:
 
 * UUID ([RFC-9562](https://www.rfc-editor.org/rfc/rfc9562.html))
-    * Version 4
-    * Version 7
+  * The 'nil' uuid (`00000000-0000-0000-0000-000000000000`)
+  * The 'max' uuid (`ffffffff-ffff-ffff-ffff-ffffffffffff`)
+  * Version 4 (random)
+  * Version 7 (time-based and random)
 * TypeID ([specification](https://github.com/jetify-com/typeid/tree/main/spec))
-    * TypeID's embed a UUID v7 by default, but can be customized with any
-      supported UUID version.
+  * TypeID's embed a UUID v7 by default, but can be customized with any
+    supported UUID version
 """.
 
 -ignore_xref(uuid/1).
@@ -40,47 +42,53 @@ IDs:
 -type id() :: uuid | type_id.
 -export_type([id/0]).
 
--doc """
-UNIX timestamp in millisecond resolution.
-
-Timestamp value as generated from
-[`erlang:system_time(millisecond)`](https://www.erlang.org/doc/apps/erts/erlang.html#system_time/1).
-""".
--type uuid_v7_unix_ts_ms() :: non_neg_integer().
--export_type([uuid_v7_unix_ts_ms/0]).
-
--doc "A 48-bit random bitstring used in UUID generation".
--type uuid_rand_a() :: <<_:48>>.
--export_type([uuid_rand_a/0]).
-
--doc "A 12-bit random bitstring used in UUID generation".
--type uuid_rand_b() :: <<_:12>>.
--export_type([uuid_rand_b/0]).
-
--doc "A 62-bit random bitstring used in UUID generation".
--type uuid_rand_c() :: <<_:62>>.
--export_type([uuid_rand_c/0]).
-
--doc "UUID version 4 (with optional random components)".
--type uuid_v4() ::
-    v4
-    | {v4, uuid_rand_a(), uuid_rand_b(), uuid_rand_c()}.
--export_type([uuid_v4/0]).
-
--doc "UUID version 7 (with optional timestamp and random components)".
--type uuid_v7() ::
-    v7
-    | {v7, uuid_v7_unix_ts_ms()}
-    | {v7, uuid_v7_unix_ts_ms(), uuid_rand_b(), uuid_rand_c()}.
--export_type([uuid_v7/0]).
-
--doc "An Erlang representation of a UUID".
--type uuid_spec() :: uuid_v4() | uuid_v7().
--export_type([uuid_spec/0]).
+%--- Options
 
 -doc "UUID output format".
 -type uuid_format() :: binary | bytes | hex | hex_nodash.
 -export_type([uuid_format/0]).
+
+%--- TypeID
+
+-doc "An Erlang representation of a TypeID".
+-type type_id_spec() :: {type_id, type_id_prefix(), uuid_spec()}.
+-export_type([type_id_spec/0]).
+
+-doc "A TypeID 'type' prefix".
+-type type_id_prefix() :: atom().
+-export_type([type_id_prefix/0]).
+
+-doc "A generated TypeID".
+-type type_id() :: binary().
+-export_type([type_id/0]).
+
+%--- UUID
+
+-doc "An UUID specification".
+-export_type([uuid_spec/0]).
+-type uuid_spec() :: uuid_short() | uuid_map().
+
+-doc "A shorthand for a UUID specification".
+-type uuid_short() ::
+    uuid_nil()
+    | uuid_max()
+    | uuid_short_v4()
+    | uuid_short_v7().
+
+-doc "A full UUID specification".
+-type uuid_value() ::
+    uuid_v4()
+    | uuid_v7().
+
+-doc "An Erlang representation of a UUID".
+-export_type([uuid_map/0]).
+-type uuid_map() :: #{
+    var => rfc | {reserved, ncs | microsoft | future},
+    ver => 0..15,
+    val => uuid_value() | uuid_nil() | uuid_max(),
+    bin => uuid_binary(),
+    hex => uuid_hex()
+}.
 
 -doc "UUID in raw binary format".
 -type uuid_binary() :: <<_:128>>.
@@ -98,23 +106,84 @@ Timestamp value as generated from
 -type uuid() :: uuid_binary() | uuid_hex() | uuid_hex_nodash().
 -export_type([uuid/0]).
 
--doc "An Erlang representation of a TypeID".
--type type_id_spec() :: {type_id_prefix(), uuid_spec()}.
--export_type([type_id_spec/0]).
+%--- UUID - nil
 
--doc "A TypeID 'type' prefix".
--type type_id_prefix() :: atom().
--export_type([type_id_prefix/0]).
+-doc "The 'nil' uuid (`00000000-0000-0000-0000-000000000000`)".
+-type uuid_nil() :: nil.
+-export_type([uuid_nil/0]).
 
--doc "A generated TypeID".
--type type_id() :: binary().
--export_type([type_id/0]).
+%--- UUID - max
+
+-doc "The 'max' uuid (`ffffffff-ffff-ffff-ffff-ffffffffffff`)".
+-type uuid_max() :: max.
+-export_type([uuid_max/0]).
+
+%--- UUID - v4
+
+-doc "UUID version 4 shorthand (with optional random components)".
+-type uuid_v4() :: #{
+    rand_a => uuid_rand_48(),
+    rand_b => uuid_rand_12(),
+    rand_c => uuid_rand_62()
+}.
+-export_type([uuid_v4/0]).
+
+-doc "UUID version 4 shorthand (with optional random components)".
+-type uuid_short_v4() ::
+    4
+    | {4, uuid_rand_48(), uuid_rand_12(), uuid_rand_62()}.
+-export_type([uuid_short_v4/0]).
+
+%--- UUID - v7
+
+-doc "UUID version 7 (with optional timestamp and random components)".
+-type uuid_v7() :: #{
+    unix_ts => uuid_v7_unix_ts_ms(),
+    rand_a => uuid_rand_12(),
+    rand_b => uuid_rand_62()
+}.
+-export_type([uuid_v7/0]).
+
+-doc "UUID version 7 shorthand (with optional timestamp and random components)".
+-type uuid_short_v7() ::
+    7
+    | {7, uuid_v7_unix_ts_ms()}
+    | {7, uuid_v7_unix_ts_ms(), uuid_rand_12(), uuid_rand_62()}.
+-export_type([uuid_short_v7/0]).
+
+-doc """
+UNIX timestamp in millisecond resolution.
+
+(Tagged) timestamp value as generated from
+[`erlang:system_time(millisecond)`](https://www.erlang.org/doc/apps/erts/erlang.html#system_time/1).
+""".
+-type uuid_v7_unix_ts_ms() ::
+    non_neg_integer()
+    | {time_unit(), non_neg_integer()}.
+-export_type([uuid_v7_unix_ts_ms/0]).
+
+-type time_unit() :: millisecond.
+
+%--- UUID - Parts
+
+-doc "A 48-bit random bitstring used in UUID generation".
+-type uuid_rand_48() :: <<_:48>>.
+-export_type([uuid_rand_48/0]).
+
+-doc "A 12-bit random bitstring used in UUID generation".
+-type uuid_rand_12() :: <<_:12>>.
+-export_type([uuid_rand_12/0]).
+
+-doc "A 62-bit random bitstring used in UUID generation".
+-type uuid_rand_62() :: <<_:62>>.
+-export_type([uuid_rand_62/0]).
 
 %--- Macros --------------------------------------------------------------------
 
--define(UUID_V4_VER, 4).
--define(UUID_V7_VER, 7).
--define(UUID_VAR, 2#10).
+-define(UUID_VAR_NCS, 2#0).
+-define(UUID_VAR_RFC, 2#10).
+-define(UUID_VAR_MS, 2#110).
+-define(UUID_VAR_RES, 2#111).
 
 % erlfmt-ignore
 -define(UUID_HEX(A, B, C, D, E), <<
@@ -128,17 +197,13 @@ Timestamp value as generated from
     <<A:8/bytes, B:4/bytes, C:4/bytes, D:4/bytes, E:12/bytes>>
 ).
 -define(UUID_V7_TO_BINARY(TS, RandB, RandC),
-    <<(TS):48, ?UUID_V7_VER:4, RandB/bits, ?UUID_VAR:2, RandC/bits>>
-).
--define(BINARY_TO_UUID_V7(TS, RandB, RandC),
-    <<(TS):48, ?UUID_V7_VER:4, RandB:12/bits, ?UUID_VAR:2, RandC:62/bits>>
+    <<(TS):48, 7:4, RandB/bits, ?UUID_VAR_RFC:2, RandC/bits>>
 ).
 -define(UUID_V4_TO_BINARY(RandA, RandB, RandC),
-    <<RandA/bits, ?UUID_V4_VER:4, RandB/bits, ?UUID_VAR:2, RandC/bits>>
+    <<RandA/bits, 4:4, RandB/bits, ?UUID_VAR_RFC:2, RandC/bits>>
 ).
--define(BINARY_TO_UUID_V4(RandA, RandB, RandC),
-    <<RandA:48/bits, ?UUID_V4_VER:4, RandB:12/bits, ?UUID_VAR:2, RandC:62/bits>>
-).
+-define(UUID_NIL, <<0:128>>).
+-define(UUID_MAX, <<16#FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF:128>>).
 
 %--- API -----------------------------------------------------------------------
 
@@ -158,7 +223,7 @@ including the current Unix system time in milliseconds.
 Equivalent to [`type_id(Type, v7)`](#type-id/2).
 """.
 -spec type_id(Type :: type_id_prefix()) -> TypeID :: type_id().
-type_id(Type) -> type_id(Type, v7).
+type_id(Type) -> type_id(Type, 7).
 
 -doc """
 Generate a type ID for the specified type and UUID format. The UUID format can
@@ -169,7 +234,7 @@ TypeIDs are encoded with a lowercase version of Crockford's base32 encoding.
 ## Example
 
 ```erlang
-1> keysmith:type_id(my_type, {v4, <<0:48>>, <<0:12>>, <<0:62>>}).
+1> keysmith:type_id(my_type, {4, <<0:48>>, <<0:12>>, <<0:62>>}).
 <<"my_type_00000000008008000000000000">>
 ```
 """.
@@ -190,11 +255,11 @@ uuid(Version) -> uuid(Version, hex).
 Generate a UUID in the specified format.
 
 The following types are supported:
-* `v4` - Random UUID v4.
-* `{v4, RandA, RandB, RandC}` - UUID v4 with set random parts.
-* `v7` - UUID v7 with the current system timestamp and a random component.
-* `{v7, TS}` - UUID v7 with a set timestamp and a random component.
-* `{v7, TS, RandB, RandC}` - UUID v7 with a set timestamp and set random components.
+* `4` - Random UUID v4.
+* `{4, RandA, RandB, RandC}` - UUID v4 with set random parts.
+* `7` - UUID v7 with the current system timestamp and a random component.
+* `{7, TS}` - UUID v7 with a set timestamp and a random component.
+* `{7, TS, RandB, RandC}` - UUID v7 with a set timestamp and set random components.
 
 The following formats are supported:
 * `bytes` / `binary` - UUID as a raw 16 byte (128 bit) binary.
@@ -218,29 +283,35 @@ This fuction raises the following exceptions:
 ## Example
 
 ```erlang
-1> keysmith:uuid(v4).
+1> keysmith:uuid(4).
 <<"38f18026-c2ee-4b5b-a8f7-439c33fb2a7a">>
-2> keysmith:uuid(v7).
+2> keysmith:uuid(7).
 <<"019228d7-b720-7484-ab83-25332e9b0a33">>
 ```
 """.
 -spec uuid(Type :: uuid_spec(), Format :: uuid_format()) -> UUID :: uuid().
-uuid(v7, Format) ->
-    uuid({v7, erlang:system_time(millisecond)}, Format);
-uuid({v7, TS}, Format) ->
+uuid(7, Format) ->
+    uuid({7, erlang:system_time(millisecond)}, Format);
+uuid({7, TS}, Format) ->
     <<RandB:12/bits, RandC:62/bits, _/bits>> =
         crypto:strong_rand_bytes(10),
     format(?UUID_V7_TO_BINARY(TS, RandB, RandC), Format);
-uuid({v7, TS, RandB, RandC}, Format) when
+uuid({7, TS, RandB, RandC}, Format) when
     bit_size(RandB) =:= 12, bit_size(RandC) =:= 62
 ->
     format(?UUID_V7_TO_BINARY(TS, RandB, RandC), Format);
-uuid(v4, Format) ->
+uuid(4, Format) ->
     <<RandA:48/bits, RandB:12/bits, RandC:62/bits, _/bits>> =
         crypto:strong_rand_bytes(16),
     format(?UUID_V4_TO_BINARY(RandA, RandB, RandC), Format);
-uuid({v4, RandA, RandB, RandC}, Format) ->
+uuid({4, RandA, RandB, RandC}, Format) ->
     format(?UUID_V4_TO_BINARY(RandA, RandB, RandC), Format);
+uuid(nil, Format) ->
+    format(?UUID_NIL, Format);
+uuid(max, Format) ->
+    format(?UUID_MAX, Format);
+uuid(#{bin := Binary}, Format) ->
+    format(Binary, Format);
 uuid(Spec, _Format) ->
     error({invalid_uuid_spec, Spec}).
 
@@ -258,10 +329,17 @@ Format can be one of `uuid` or `type_id` ([`id_type()`](#id_type/0)).
   ### Example
 
   ```erlang
-  1> UUIDv7 = keysmith:uuid({v7, 123}).
-  <<"00000000-007b-7054-9789-64298c4136ee">>
+  1> UUIDv7 = keysmith:uuid({7, 123}).
+  <<"00000000-007b-7dec-9675-e4c52b8138cc">>
   2> keysmith:parse(uuid, UUIDv7).
-  {v7,123,<<5,4:4>>,<<94,37,144,166,49,4,219,46:6>>}
+  #{var => rfc,
+    ver => 7,
+    bin => <<0,0,0,0,0,123,125,236,150,117,228,197,43,129,56,204>>,
+    hex => <<"00000000-007b-7dec-9675-e4c52b8138cc">>,
+    val =>
+        #{rand_a => <<222,12:4>>,
+          rand_b => <<89,215,147,20,174,4,227,12:6>>,
+          unix_ts => {millisecond,123}}}
   ```
 
 * `type_id`
@@ -278,11 +356,17 @@ Format can be one of `uuid` or `type_id` ([`id_type()`](#id_type/0)).
 
   ```erlang
   1> TypeID = keysmith:type_id(my_type).
-  <<"my_type_01j8m75gy0fqws0860vmrqv1rr">>
+  <<"my_type_01j9p5p9wpf5asad1kvdww0gtd">>
   2> keysmith:parse(type_id, TypeID).
-  {my_type,{v7,1727255462848,
-               <<223,9:4>>,
-               <<64,131,3,116,197,246,28,24:6>>}}
+  {type_id,my_type,
+           #{var => rfc,
+             ver => 7,
+             bin => <<1,146,108,91,39,150,121,85,149,52,51,219,121,192,67,77>>,
+             hex => <<"01926c5b-2796-7955-9534-33db79c0434d">>,
+             val =>
+                 #{rand_a => <<149,5:4>>,
+                   rand_b => <<84,208,207,109,231,1,13,13:6>>,
+                   unix_ts => {millisecond,1728394766230}}}}
   ```
 
 ## Errors
@@ -298,11 +382,11 @@ This fuction raises the following exceptions:
     * The UUID not being a valid hexadecimal 36-byte UUID (with dashes)
     * The UUID not being a valid hexadecimal 32-byte UUID (without dashes)
     * The UUID not being a raw binary UUID of 128 bits
-* `{invalid_id_type, Type}` if the format is not supported.
+* `{invalid_format, Format}` if the format is not supported.
 """.
 -spec parse
-    (Type :: uuid, UUID :: uuid()) -> uuid_spec();
-    (Type :: type_id, TypeID :: type_id()) -> type_id_spec().
+    (Format :: uuid, UUID :: uuid()) -> uuid_map();
+    (Format :: type_id, TypeID :: type_id()) -> type_id_spec().
 parse(type_id, TypeID) ->
     case string:split(TypeID, <<$_>>, trailing) of
         [<<>>, _ID] ->
@@ -319,20 +403,30 @@ parse(type_id, TypeID) ->
                 catch
                     error:badarg -> error({invalid_id, type_id, TypeID})
                 end,
-            {AtomTag, parse(uuid, UUID)};
+            {type_id, AtomTag, parse(uuid, UUID)};
+        [ID] when byte_size(ID) == 26 ->
+            case cb32_decode(ID) of
+                <<0:2, UUIDBin:128/bits>> ->
+                    {type_id, parse(uuid, UUIDBin)};
+                _Other ->
+                    error({invalid_id, type_id, TypeID})
+            end;
         _ ->
             error({invalid_id, type_id, TypeID})
     end;
-parse(uuid, ?BINARY_TO_UUID_V7(TS, RandB, RandC)) ->
-    {v7, TS, RandB, RandC};
-parse(uuid, ?BINARY_TO_UUID_V4(RandA, RandB, RandC)) ->
-    {v4, RandA, RandB, RandC};
 parse(uuid, ?UUID_HEX(A, B, C, D, E)) ->
     parse(uuid, binary:decode_hex(?UUID_HEX_NODASH(A, B, C, D, E)));
+parse(uuid, <<_:48, Ver:4, _:76>> = UUID) ->
+    parse_uuid(#{
+        var => parse_uuid_variant(UUID),
+        ver => Ver,
+        bin => UUID,
+        hex => format(UUID, hex)
+    });
 parse(uuid, Value) ->
     error({invalid_id, uuid, Value});
-parse(Type, _Value) ->
-    error({invalid_id_type, Type}).
+parse(Format, _Value) ->
+    error({invalid_format, Format}).
 
 %--- Internal ------------------------------------------------------------------
 
@@ -347,13 +441,38 @@ format(<<A:4/bytes, B:2/bytes, C:2/bytes, D:2/bytes, E:6/bytes>>, hex) ->
     );
 format(UUID, binary) ->
     UUID;
-% FIXME: Remove 'bin' alias. Add 'bytes' instead?
 format(UUID, bytes) ->
     UUID;
 format(UUID, hex_nodash) ->
     binary:encode_hex(UUID, lowercase);
 format(_UUID, Format) ->
     error({invalid_uuid_format, Format}).
+
+parse_uuid_variant(<<_:64, ?UUID_VAR_NCS:1, _:63>>) -> {reserved, ncs};
+parse_uuid_variant(<<_:64, ?UUID_VAR_RFC:2, _:62>>) -> rfc;
+parse_uuid_variant(<<_:64, ?UUID_VAR_MS:3, _:61>>) -> {reserved, microsoft};
+parse_uuid_variant(<<_:64, ?UUID_VAR_RES:3, _:61>>) -> {reserved, future};
+parse_uuid_variant(_) -> unknown.
+
+parse_uuid(#{bin := ?UUID_NIL} = UUID) ->
+    UUID#{val => nil};
+parse_uuid(#{bin := ?UUID_MAX} = UUID) ->
+    UUID#{val => max};
+parse_uuid(#{var := rfc, ver := 4, bin := Bin} = UUID) ->
+    UUID#{val => decode_uuid(4, Bin)};
+parse_uuid(#{var := rfc, ver := 5, bin := Bin} = UUID) ->
+    UUID#{val => decode_uuid(5, Bin)};
+parse_uuid(#{var := rfc, ver := 7, bin := Bin} = UUID) ->
+    UUID#{val => decode_uuid(7, Bin)};
+parse_uuid(UUID) ->
+    UUID.
+
+decode_uuid(4, <<RandA:48/bits, _Ver:4, RandB:12/bits, _Var:2, RandC:62/bits>>) ->
+    #{rand_a => RandA, rand_b => RandB, rand_c => RandC};
+decode_uuid(5, <<TS:48, _Ver:4, RandA:12/bits, _Var:2, RandB:62/bits>>) ->
+    #{unix_ts => {millisecond, TS}, rand_a => RandA, rand_b => RandB};
+decode_uuid(7, <<TS:48, _Ver:4, RandA:12/bits, _Var:2, RandB:62/bits>>) ->
+    #{unix_ts => {millisecond, TS}, rand_a => RandA, rand_b => RandB}.
 
 type_tag(Type) when is_atom(Type) -> atom_to_binary(Type).
 

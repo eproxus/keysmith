@@ -8,6 +8,16 @@ and this project adheres to
 
 ## [Unreleased](https://github.com/eproxus/keysmith/compare/v0.5.0...HEAD)
 
+### Added
+
+- Support for `nil` and `max` UUIDs from RFC 9562
+- Support for parsing any UUID variant and version
+
+### Changed
+
+- **BREAKING CHANGE:** Parsed UUIDs are now returned as maps instead of
+  shorthand tuples.
+
 ## [0.5.0](https://github.com/eproxus/keysmith/releases/tag/v0.5.0) - 2024-09-25
 
 Initial public version of the library.
