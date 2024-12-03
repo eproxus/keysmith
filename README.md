@@ -1,14 +1,23 @@
-# keysmith [![CI Status][ci-img]][ci] [![Lint Status][lint-img]][lint] [![Hex.pm Version][hex-img]][hex] [![License][license-img]][license]
+# keysmith [![CI Status][ci-img]][ci] [![Lint Status][lint-img]][lint] [![Hex.pm Version][hex-img]][hex] [![Minimum Erlang Version][erlang-img]][erlang] [![License][license-img]][license]
 
-Keysmith is a well tested and performant library for generating unique
-identifiers. Keysmith currently supports the following formats:
+KeySmith is a library for generating unique IDs. It supports two types of
+IDs:
 
-* UUID
+* UUID ([RFC-9562](https://www.rfc-editor.org/rfc/rfc9562.html))
+  * The 'nil' uuid (`00000000-0000-0000-0000-000000000000`)
+  * The 'max' uuid (`ffffffff-ffff-ffff-ffff-ffffffffffff`)
   * Version 4 (random)
-  * Version 7 (time-based)
-* TypeID
-  * Defaults to UUID version 7
-  * Can use any supported UUID version
+  * Version 7 (time-based and random)
+* TypeID ([specification](https://github.com/jetify-com/typeid/tree/main/spec))
+  * TypeID's embed a UUID v7 by default, but can be customized with any
+    supported UUID version
+
+Keysmith is a well tested, secure and performant:
+
+* Full test coverage
+* Property-based tests
+* Uses `crypto` for secure random number generation
+* Fast and efficient using binary pattern matching
 
 ## Usage
 
@@ -136,7 +145,7 @@ This project adheres to
 
 This project uses the [MIT License][license].
 
-[ci]:          https://github.com/eproxus/keysmith/actions/workflows/erlang.yml
+[ci]:          https://github.com/eproxus/keysmith/actions/workflows/erlang.yml?query=branch%3Amain
 [ci-img]:      https://img.shields.io/github/actions/workflow/status/eproxus/keysmith/erlang.yml?label=ci
 [lint]:        https://github.com/eproxus/keysmith/actions/workflows/lint.yml
 [lint-img]:    https://img.shields.io/github/actions/workflow/status/eproxus/keysmith/lint.yml?label=lint
@@ -144,3 +153,5 @@ This project uses the [MIT License][license].
 [hex-img]:     https://img.shields.io/hexpm/v/keysmith
 [license]:     LICENSE.md
 [license-img]: https://img.shields.io/hexpm/l/keysmith
+[erlang]:      https://github.com/eproxus/keysmith/blob/main/.tool-versions
+[erlang-img]:  https://img.shields.io/badge/erlang-27+-blue.svg?style=flat-square
