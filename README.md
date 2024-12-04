@@ -1,3 +1,4 @@
+<!-- markdownlint-disable-line MD013 -->
 # keysmith [![CI Status][ci-img]][ci] [![Lint Status][lint-img]][lint] [![Hex.pm Version][hex-img]][hex] [![Minimum Erlang Version][erlang-img]][erlang] [![License][license-img]][license]
 
 KeySmith is a library for generating unique IDs. It supports two types of
@@ -154,4 +155,4 @@ This project uses the [MIT License][license].
 [license]:     LICENSE.md
 [license-img]: https://img.shields.io/hexpm/l/keysmith
 [erlang]:      https://github.com/eproxus/keysmith/blob/main/.tool-versions
-[erlang-img]:  https://img.shields.io/badge/erlang-27+-blue.svg?style=flat-square
+[erlang-img]:  https://img.shields.io/badge/erlang-27+-blue.svg
