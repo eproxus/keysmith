@@ -6,8 +6,6 @@ jobs:
   ci:
     name: Erlang CI
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
     steps:
       - name: Checkout code
         # yamllint disable-line
