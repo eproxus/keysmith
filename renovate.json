@@ -1,7 +1,12 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ],
-  "configMigration": true
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": ["config:recommended", "group:allNonMajor"],
+    "configMigration": true,
+    "packageRules": [
+        {
+            "matchManagers": ["github-actions"],
+            "groupName": "github-actions",
+            "matchUpdateTypes": ["minor", "patch"]
+        }
+    ]
 }
