@@ -13,7 +13,7 @@ jobs:
       # uses .markdownlint.yml for configuration
       - name: markdownlint
         # yamllint disable-line
-        uses: DavidAnson/markdownlint-cli2-action@a23dae216ce3fee4db69da41fed90d2a4af801cf # v19.0.0
+        uses: DavidAnson/markdownlint-cli2-action@05f32210e84442804257b2a6f20b273450ec8265 # v19.1.0
         with:
           globs: |
             .github/**/*.md
@@ -27,7 +27,7 @@ jobs:
 
       - name: actionlint
         # yamllint disable-line
-        uses: reviewdog/action-actionlint@f3dcc52bc6039e5d736486952379dce3e869e8a2 # v1.63.0
+        uses: reviewdog/action-actionlint@a5524e1c19e62881d79c1f1b9b6f09f16356e281 # v1.65.2
         env:
           SHELLCHECK_OPTS: -o all
 
