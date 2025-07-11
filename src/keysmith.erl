@@ -26,9 +26,6 @@ IDs:
 -ignore_xref(parse/2).
 -export([parse/2]).
 
-% Disable unused macro warning since it has false positives
--hank([unused_macros]).
-
 -ifdef(TEST).
 -ignore_xref(cb32_encode/1).
 -export([cb32_encode/1]).
