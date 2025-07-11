@@ -1,5 +1,5 @@
 [tasks.lint]
-depends = ["lint:**"]
+depends = ["lint:*"]
 
 [tasks."lint:yaml"]
 run = "yamllint ."
@@ -7,11 +7,14 @@ run = "yamllint ."
 [tasks."lint:md"]
 run = "markdownlint-cli2 *.md .github/**/*.md"
 
+[tasks."lint:shell"]
+run = "shellcheck -o all *.sh"
+
 [tasks."lint:erl"]
 run = "rebar3 fmt --check"
 
 [tasks.ci]
-depends = ["lint:**"]
+depends = ["lint:*"]
 run = "rebar3 as test ci"
 
 [tools]
