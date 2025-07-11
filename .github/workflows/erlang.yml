@@ -21,6 +21,7 @@ jobs:
         id: setup-beam
         with:
           otp-version: ${{matrix.otp}}
+          rebar3-version: '3'
 
       - name: Checkout code
         # yamllint disable-line
