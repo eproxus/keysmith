@@ -22,19 +22,49 @@ error() {
     exit 1
 }
 dry_run() { log "DRY-RUN" "${YELLOW}" "$1"; }
+clear_previous_line() { printf "\e[F\e[K"; }
 
-# Execute with dry-run support
-run() {
-    if [ "${DRY_RUN}" = "true" ]; then
-        dry_run "$1: $2"
-    else
-        info "$1..."
-        if eval "$2"; then
-            info "$1 ✓"
+# Unified execute function with dry-run support
+execute() {
+    mode="$1"
+    description="$2"
+    command="$3"
+    if [ "${mode}" = "check" ]; then
+        info "🔄 ${description}..."
+        if eval "${command}"; then
+            clear_previous_line
+            info "✅ ${description}"
         else
-            error "Failed: $1"
+            clear_previous_line
+            if [ "${DRY_RUN}" = "true" ]; then
+                warn "⚠️ ${description} failed (would block release)"
+            else
+                error "❌ ${description} failed"
+            fi
+        fi
+    else
+        if [ "${DRY_RUN}" = "true" ]; then
+            dry_run "⏸️ ${description}"
+        else
+            info "🔄 ${description}..."
+            if eval "${command}"; then
+                clear_previous_line
+                info "✅ ${description}"
+            else
+                clear_previous_line
+                error "❌ ${description}"
+            fi
         fi
     fi
+}
+
+# Convenience helpers for better readability
+check() {
+    execute "check" "$1" "$2"
+}
+
+action() {
+    execute "action" "$1" "$2"
 }
 
 # Parse arguments
@@ -58,34 +88,40 @@ done
 for tool in git mise; do
     command -v "${tool}" > /dev/null 2>&1 || error "Missing tool: ${tool}"
 done
-mise install
+mise install --quiet
 
 # Check authentication
 rebar3 hex user whoami > /dev/null 2>&1 || error "Not authenticated with Hex.pm"
 gh auth status > /dev/null 2>&1 || error "Not authenticated with GitHub"
 
 # Pre-flight checks
-if [ "${DRY_RUN}" = "false" ]; then
-    main_commit=$(git rev-parse main)
-    current_commit=$(git rev-parse HEAD)
-    [ "${current_commit}" = "${main_commit}" ] || error "Current commit is not on main branch"
-    git_status=$(git status --porcelain)
-    if ! git diff-index --quiet HEAD -- || [ -n "${git_status}" ]; then
-        error "Repository not clean"
-    fi
-else
-    dry_run "Skipping main branch and clean repo checks"
-fi
+main_commit=$(git rev-parse main)
+current_commit=$(git rev-parse HEAD)
+check "on main branch" "[ '${current_commit}' = '${main_commit}' ]"
+check "clean repository" "git diff-index --quiet HEAD -- && [ -z \"\$(git status --porcelain)\" ]"
+
+action "Fetching from remote" "git fetch --quiet"
+remote_main=$(git rev-parse origin/main)
+check "main up-to-date with origin" "[ '${main_commit}' = '${remote_main}' ]"
+
+# Check GitHub Actions status
+WORKFLOW_NAMES=$(gh workflow list --json name --jq '[.[].name] | tostring')
+error_message=$(gh run list --branch main --commit "${main_commit}" \
+    --json conclusion,workflowName \
+    --jq "
+        ([.[] | select(.conclusion==\"success\") | .workflowName] | sort) as \$successful |
+        if \$successful == (${WORKFLOW_NAMES} | sort)
+        then \"\"
+        else \"Error: Mismatch in successful workflows. Successful: \\(\$successful)\"
+        end
+    ")
+check "build status of main" "[ -z '${error_message}' ]"
 
 # Main release process
-if [ "${DRY_RUN}" = "true" ]; then
-    info "Starting release (DRY-RUN)..."
-else
-    info "Starting release..."
-fi
+info "Starting release..."
 
-run "Running CI checks" "mise run ci"
-run "Updating changelog" "git-cliff --bump"
+action "Running CI checks" "mise run ci"
+action "Updating changelog" "git-cliff --bump"
 
 version=$(git-cliff --bumped-version --output=-)
 [ -n "${version}" ] || error "Failed to get version"
@@ -96,32 +132,29 @@ git tag -l "${version}" | grep -q "^${version}$" && error "Tag ${version} alread
 
 # Commit if changes exist
 if ! git diff-index --quiet HEAD --; then
-    run "Committing version ${version}" "git commit -m 'chore(version): Release ${version}'"
+    action "Committing version ${version}" "git commit -m 'chore(version): Release ${version}'"
 else
     warn "No changes to commit"
 fi
 
-run "Tagging release ${version}" "git tag '${version}'"
-run "Pushing to remote" "git push origin main --tags"
-run "Publishing to Hex.pm" "rebar3 hex publish"
+action "Tagging release ${version}" "git tag --sign '${version}'"
+action "Pushing to remote" "git push origin main --tags"
+action "Publishing to Hex.pm" "rebar3 hex publish"
 
 # GitHub release
-cliff_args="--strip=all --output=-"
+# FIXME: Make this run git-cliff instead
+git_cliff() { mise run --quiet changelog --strip=all --output=- "$@"; }
 if [ "${DRY_RUN}" = "true" ]; then
-    cliff_args="--unreleased --bump ${cliff_args}"
+    release_notes=$(git_cliff --unreleased --bump)
 else
-    cliff_args="--latest ${cliff_args}"
+    release_notes=$(git_cliff --latest)
 fi
-release_notes=$(git-cliff "${cliff_args}" | tail -n +2)
+release_notes=$(echo "${release_notes}" | tail -n +2)
 [ -n "${release_notes}" ] || error "Failed to get release notes"
 
-if [ "${DRY_RUN}" = "true" ]; then
-    dry_run "Would create GitHub release: gh release create '${version}'"
-    dry_run "Release notes preview:"
-    printf '%s' "${release_notes}" | glow
-else
-    run "Creating GitHub release" "gh release create '${version}' --title 'Release ${version}' --notes '${release_notes}'"
-fi
+info "Release notes:"
+printf '%s' "${release_notes}" | glow
+action "Creating GitHub release" "gh release create '${version}' --title 'Release ${version}' --notes '${release_notes}'"
 
 # Completion
 if [ "${DRY_RUN}" = "true" ]; then

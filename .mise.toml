@@ -36,7 +36,7 @@ run = "rebar3 ci"
 
 [tasks.changelog]
 description = "Update the changelog"
-run = 'git-cliff'
+run = 'git-cliff --exclude-path="scripts/**"'
 
 [tasks."release"]
 description = "Dry-run a release of the library"
