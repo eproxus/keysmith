@@ -99,7 +99,6 @@ main_commit=$(git rev-parse main)
 current_commit=$(git rev-parse HEAD)
 check "Commit is on main branch" "[ '${current_commit}' = '${main_commit}' ]"
 check "Repository is clean" "[ -z \"\$(git status --porcelain)\" ]"
-action "Switching to main branch" "git switch main"
 
 action "Fetching from remote" "git fetch --quiet"
 remote_main=$(git rev-parse origin/main)
@@ -121,7 +120,7 @@ check "build status of main" "[ -z '${error_message}' ]"
 # Main release process
 info "Starting release..."
 
-action "Running CI checks" "mise run ci"
+check "Running CI checks" "mise run ci"
 action "Updating changelog" "git-cliff --bump"
 
 version=$(git-cliff --bumped-version --output=-)
