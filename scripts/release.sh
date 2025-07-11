@@ -39,7 +39,7 @@ execute() {
             if [ "${DRY_RUN}" = "true" ]; then
                 warn "⚠️ ${description} failed (would block release)"
             else
-                error "❌ ${description} failed"
+                error "⚠️ ${description} failed"
             fi
         fi
     else
@@ -52,7 +52,7 @@ execute() {
                 info "✅ ${description}"
             else
                 clear_previous_line
-                error "❌ ${description}"
+                error "⚠️ ${description}"
             fi
         fi
     fi
@@ -97,8 +97,9 @@ gh auth status > /dev/null 2>&1 || error "Not authenticated with GitHub"
 # Pre-flight checks
 main_commit=$(git rev-parse main)
 current_commit=$(git rev-parse HEAD)
-check "main branch is pushed" "[ '${current_commit}' = '${main_commit}' ]"
-check "clean repository" "[ -z \"\$(git status --porcelain)\" ]"
+check "Commit is on main branch" "[ '${current_commit}' = '${main_commit}' ]"
+check "Repository is clean" "[ -z \"\$(git status --porcelain)\" ]"
+action "Switching to main branch" "git switch main"
 
 action "Fetching from remote" "git fetch --quiet"
 remote_main=$(git rev-parse origin/main)
