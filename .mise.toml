@@ -1,6 +1,6 @@
 [tools]
 # Erlang
-erlang = ["27", "28", "latest"]
+erlang = ["latest", "28", "27"]
 rebar = "latest"
 # Build dependencies
 gh = "latest"
