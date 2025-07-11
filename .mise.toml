@@ -13,3 +13,7 @@ run = "rebar3 fmt --check"
 [tasks.ci]
 depends = ["lint:**"]
 run = "rebar3 as test ci"
+
+[tools]
+erlang = "28"
+rebar = "3"

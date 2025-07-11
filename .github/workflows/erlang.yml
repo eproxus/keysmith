@@ -6,21 +6,25 @@ name: Erlang CI
 
 jobs:
   ci:
-    name: Erlang CI
+    name: Erlang ${{matrix.otp}}
     runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        otp: ["27", "28"]
     steps:
 
-      - name: Checkout code
-        # yamllint disable-line
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@v4
 
       - name: Install Erlang
         # yamllint disable-line
         uses: erlef/setup-beam@5304e04ea2b355f03681464e683d92e3b2f18451 # v1.18.2
         id: setup-beam
         with:
-          version-file: .tool-versions
-          version-type: strict
+          otp-version: ${{matrix.otp}}
+
+      - name: Checkout code
+        # yamllint disable-line
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Restore/save from/to cache
         # yamllint disable-line
