@@ -106,11 +106,13 @@ run "Pushing to remote" "git push origin main --tags"
 run "Publishing to Hex.pm" "rebar3 hex publish"
 
 # GitHub release
+cliff_args="--strip=all --output=-"
 if [ "${DRY_RUN}" = "true" ]; then
-    release_notes=$(git-cliff --unreleased --bump --strip=all --output=-)
+    cliff_args="--unreleased --bump ${cliff_args}"
 else
-    release_notes=$(git-cliff --latest --strip=all --output=-)
+    cliff_args="--latest ${cliff_args}"
 fi
+release_notes=$(git-cliff ${cliff_args} | tail -n +2)
 [ -n "${release_notes}" ] || error "Failed to get release notes"
 
 if [ "${DRY_RUN}" = "true" ]; then
