@@ -98,7 +98,7 @@ gh auth status > /dev/null 2>&1 || error "Not authenticated with GitHub"
 main_commit=$(git rev-parse main)
 current_commit=$(git rev-parse HEAD)
 check "on main branch" "[ '${current_commit}' = '${main_commit}' ]"
-check "clean repository" "git diff-index --quiet HEAD -- && [ -z \"\$(git status --porcelain)\" ]"
+check "clean repository" "[ -z \"\$(git status --porcelain)\" ]"
 
 action "Fetching from remote" "git fetch --quiet"
 remote_main=$(git rev-parse origin/main)
