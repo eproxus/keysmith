@@ -388,32 +388,7 @@ This fuction raises the following exceptions:
     (Format :: uuid, UUID :: uuid()) -> uuid_map();
     (Format :: type_id, TypeID :: type_id()) -> type_id_spec().
 parse(type_id, TypeID) ->
-    case string:split(TypeID, <<$_>>, trailing) of
-        [<<>>, _ID] ->
-            error({invalid_id, type_id, TypeID});
-        [Tag, ID] when byte_size(ID) == 26 ->
-            {AtomTag, UUID} =
-                try
-                    case cb32_decode(ID) of
-                        <<0:2, UUIDBin:128/bits>> ->
-                            {binary_to_existing_atom(Tag), UUIDBin};
-                        _Other ->
-                            error({invalid_id, type_id, TypeID})
-                    end
-                catch
-                    error:badarg -> error({invalid_id, type_id, TypeID})
-                end,
-            {type_id, AtomTag, parse(uuid, UUID)};
-        [ID] when byte_size(ID) == 26 ->
-            case cb32_decode(ID) of
-                <<0:2, UUIDBin:128/bits>> ->
-                    {type_id, parse(uuid, UUIDBin)};
-                _Other ->
-                    error({invalid_id, type_id, TypeID})
-            end;
-        _ ->
-            error({invalid_id, type_id, TypeID})
-    end;
+    parse_type_id(TypeID);
 parse(uuid, ?UUID_HEX(A, B, C, D, E)) ->
     parse(uuid, binary:decode_hex(?UUID_HEX_NODASH(A, B, C, D, E)));
 parse(uuid, <<_:48, Ver:4, _:76>> = UUID) ->
@@ -447,6 +422,34 @@ format(UUID, hex_nodash) ->
     binary:encode_hex(UUID, lowercase);
 format(_UUID, Format) ->
     error({invalid_uuid_format, Format}).
+
+parse_type_id(TypeID) ->
+    case string:split(TypeID, <<$_>>, trailing) of
+        [<<>>, _ID] ->
+            error({invalid_id, type_id, TypeID});
+        [Tag, ID] when byte_size(ID) == 26 ->
+            {AtomTag, UUID} =
+                try
+                    case cb32_decode(ID) of
+                        <<0:2, UUIDBin:128/bits>> ->
+                            {binary_to_existing_atom(Tag), UUIDBin};
+                        _Other ->
+                            error({invalid_id, type_id, TypeID})
+                    end
+                catch
+                    error:badarg -> error({invalid_id, type_id, TypeID})
+                end,
+            {type_id, AtomTag, parse(uuid, UUID)};
+        [ID] when byte_size(ID) == 26 ->
+            case cb32_decode(ID) of
+                <<0:2, UUIDBin:128/bits>> ->
+                    {type_id, parse(uuid, UUIDBin)};
+                _Other ->
+                    error({invalid_id, type_id, TypeID})
+            end;
+        _ ->
+            error({invalid_id, type_id, TypeID})
+    end.
 
 parse_uuid_variant(<<_:64, ?UUID_VAR_NCS:1, _:63>>) -> {reserved, ncs};
 parse_uuid_variant(<<_:64, ?UUID_VAR_RFC:2, _:62>>) -> rfc;
