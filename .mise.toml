@@ -10,6 +10,7 @@ markdownlint-cli2 = "latest"
 shellcheck = "latest"
 yamllint = "latest"
 shfmt = "latest"
+actionlint = "latest"
 
 [tasks.lint]
 depends = ["lint:*"]
@@ -20,18 +21,18 @@ run = "yamllint ."
 [tasks."lint:md"]
 run = "markdownlint-cli2 *.md .github/**/*.md"
 
-[tasks."lint:shell"]
+[tasks."lint:sh"]
 run = [
     "shellcheck -o all **/*.sh",
     "shfmt --diff **/*.sh"
 ]
 
-[tasks."lint:erl"]
-run = "rebar3 fmt --check"
+[tasks."lint:action"]
+run = "actionlint"
 
 [tasks.ci]
 depends = ["lint:*"]
-run = "rebar3 as test ci"
+run = "rebar3 ci"
 
 [tasks.changelog]
 description = "Update the changelog"
