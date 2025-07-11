@@ -99,6 +99,7 @@ main_commit=$(git rev-parse main)
 current_commit=$(git rev-parse HEAD)
 check "Commit is on main branch" "[ '${current_commit}' = '${main_commit}' ]"
 check "Repository is clean" "[ -z \"\$(git status --porcelain)\" ]"
+action "Switch to main branch pointer" "git switch main"
 
 action "Fetching from remote" "git fetch --quiet"
 remote_main=$(git rev-parse origin/main)
@@ -132,7 +133,7 @@ git tag -l "${version}" | grep -q "^${version}$" && error "Tag ${version} alread
 
 # Commit if changes exist
 if ! git diff-index --quiet HEAD --; then
-    action "Committing version ${version}" "git commit -m 'chore(version): Release ${version}'"
+    action "Committing version ${version}" "git commit --all --message 'chore(version): Release ${version}'"
 else
     warn "No changes to commit"
 fi
