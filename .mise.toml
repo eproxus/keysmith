@@ -1,3 +1,16 @@
+[tools]
+# Erlang
+erlang = ["27", "28", "latest"]
+rebar = "latest"
+# Build dependencies
+gh = "latest"
+git-cliff = "latest"
+glow = "latest"
+markdownlint-cli2 = "latest"
+shellcheck = "latest"
+yamllint = "latest"
+shfmt = "latest"
+
 [tasks.lint]
 depends = ["lint:*"]
 
@@ -8,7 +21,10 @@ run = "yamllint ."
 run = "markdownlint-cli2 *.md .github/**/*.md"
 
 [tasks."lint:shell"]
-run = "shellcheck -o all *.sh"
+run = [
+    "shellcheck -o all **/*.sh",
+    "shfmt --diff **/*.sh"
+]
 
 [tasks."lint:erl"]
 run = "rebar3 fmt --check"
@@ -21,6 +37,6 @@ run = "rebar3 as test ci"
 description = "Update the changelog"
 run = 'git-cliff'
 
-[tools]
-erlang = "28"
-rebar = "3"
+[tasks."release"]
+description = "Dry-run a release of the library"
+run = 'scripts/release.sh'
