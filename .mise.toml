@@ -17,6 +17,10 @@ run = "rebar3 fmt --check"
 depends = ["lint:*"]
 run = "rebar3 as test ci"
 
+[tasks.changelog]
+description = "Update the changelog"
+run = 'git-cliff'
+
 [tools]
 erlang = "28"
 rebar = "3"
