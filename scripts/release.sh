@@ -112,7 +112,7 @@ if [ "${DRY_RUN}" = "true" ]; then
 else
     cliff_args="--latest ${cliff_args}"
 fi
-release_notes=$(git-cliff ${cliff_args} | tail -n +2)
+release_notes=$(git-cliff "${cliff_args}" | tail -n +2)
 [ -n "${release_notes}" ] || error "Failed to get release notes"
 
 if [ "${DRY_RUN}" = "true" ]; then
