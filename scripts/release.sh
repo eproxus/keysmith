@@ -66,8 +66,9 @@ gh auth status > /dev/null 2>&1 || error "Not authenticated with GitHub"
 
 # Pre-flight checks
 if [ "${DRY_RUN}" = "false" ]; then
-    current_branch=$(git branch --show-current)
-    [ "${current_branch}" = "main" ] || error "Not on main branch"
+    main_commit=$(git rev-parse main)
+    current_commit=$(git rev-parse HEAD)
+    [ "${current_commit}" = "${main_commit}" ] || error "Current commit is not on main branch"
     git_status=$(git status --porcelain)
     if ! git diff-index --quiet HEAD -- || [ -n "${git_status}" ]; then
         error "Repository not clean"
