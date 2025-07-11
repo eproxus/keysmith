@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e -x
+set -e -u
 
 SUBTREE_PREFIX="test/fixtures/type_id"
 REMOTE_REPO="git@github.com:jetify-com/typeid.git"
@@ -10,6 +10,26 @@ GIT_ROOT="$(git rev-parse --show-toplevel)"
 
 # Ensure we're in the root of the git repository
 cd "${GIT_ROOT}"
+
+# Check if there are any uncommitted changes
+STASH_NEEDED=false
+if ! git diff-index --quiet HEAD --; then
+    echo "Working directory has uncommitted changes. Stashing..."
+    TIMESTAMP=$(date)
+    git stash push -m "Temporary stash for subtree update - ${TIMESTAMP}"
+    STASH_NEEDED=true
+fi
+
+# Function to restore stash on exit
+cleanup() {
+    if [ "${STASH_NEEDED}" = true ]; then
+        echo "Restoring stashed changes..."
+        git stash pop
+    fi
+}
+
+# Set trap to ensure stash is restored even if script fails
+trap cleanup EXIT
 
 # Update or add the subtree
 if [ -d "${SUBTREE_PREFIX}" ]; then
