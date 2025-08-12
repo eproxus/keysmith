@@ -1,4 +1,5 @@
 -module(prop_keysmith).
+-eqwalizer(ignore).
 -include_lib("proper/include/proper.hrl").
 -include_lib("stdlib/include/assert.hrl").
 

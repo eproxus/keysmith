@@ -27,7 +27,6 @@ IDs:
 -export([parse/2]).
 
 % Disable unused macro warning since it has false positives
--hank([unused_macros]).
 
 -ifdef(TEST).
 -ignore_xref(cb32_encode/1).
@@ -292,19 +291,21 @@ This fuction raises the following exceptions:
 -spec uuid(Type :: uuid_spec(), Format :: uuid_format()) -> UUID :: uuid().
 uuid(7, Format) ->
     uuid({7, erlang:system_time(millisecond)}, Format);
-uuid({7, TS}, Format) ->
+uuid({7, {millisecond, TS}}, Format) ->
+    uuid({7, TS}, Format);
+uuid({7, TS}, Format) when is_integer(TS) ->
     <<RandB:12/bits, RandC:62/bits, _/bits>> =
         crypto:strong_rand_bytes(10),
     format(?UUID_V7_TO_BINARY(TS, RandB, RandC), Format);
-uuid({7, TS, RandB, RandC}, Format) when
-    bit_size(RandB) =:= 12, bit_size(RandC) =:= 62
-->
+uuid({7, {millisecond, TS}, <<_:12>> = RandB, <<_:62>> = RandC}, Format) ->
+    uuid({7, TS, RandB, RandC}, Format);
+uuid({7, TS, <<_:12>> = RandB, <<_:62>> = RandC}, Format) when is_integer(TS) ->
     format(?UUID_V7_TO_BINARY(TS, RandB, RandC), Format);
 uuid(4, Format) ->
     <<RandA:48/bits, RandB:12/bits, RandC:62/bits, _/bits>> =
         crypto:strong_rand_bytes(16),
     format(?UUID_V4_TO_BINARY(RandA, RandB, RandC), Format);
-uuid({4, RandA, RandB, RandC}, Format) ->
+uuid({4, <<_:48>> = RandA, <<_:12>> = RandB, <<_:62>> = RandC}, Format) ->
     format(?UUID_V4_TO_BINARY(RandA, RandB, RandC), Format);
 uuid(nil, Format) ->
     format(?UUID_NIL, Format);
@@ -425,9 +426,9 @@ format(_UUID, Format) ->
 
 parse_type_id(TypeID) ->
     case string:split(TypeID, <<$_>>, trailing) of
-        [<<>>, _ID] ->
+        [~"", _ID] ->
             error({invalid_id, type_id, TypeID});
-        [Tag, ID] when byte_size(ID) == 26 ->
+        [Tag, ID] when byte_size(ID) =:= 26 ->
             {AtomTag, UUID} =
                 try
                     case cb32_decode(ID) of
@@ -440,7 +441,7 @@ parse_type_id(TypeID) ->
                     error:badarg -> error({invalid_id, type_id, TypeID})
                 end,
             {type_id, AtomTag, parse(uuid, UUID)};
-        [ID] when byte_size(ID) == 26 ->
+        [ID] when byte_size(ID) =:= 26 ->
             case cb32_decode(ID) of
                 <<0:2, UUIDBin:128/bits>> ->
                     {type_id, parse(uuid, UUIDBin)};

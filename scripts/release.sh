@@ -9,6 +9,11 @@
 #
 set -e -u
 
+# FIXME: Commit opens editor
+# FIXME: Changelog gets "by @eproxus" added to all commits after 'git switch main'
+# FIXME: Release still has "Version 0.6.1" as description.
+# FIXME: GitHub release has "Release v0.6.1" instead of just "v0.6.1"
+
 # Configuration
 DRY_RUN=true
 
@@ -155,7 +160,7 @@ release_notes=$(echo "${release_notes}" | tail -n +2)
 
 info "Release notes:"
 printf '%s' "${release_notes}" | glow
-action "Creating GitHub release" "gh release create '${version}' --title 'Release ${version}' --notes '${release_notes}'"
+action "Creating GitHub release" "gh release create '${version}' --title '${version}' --notes '${release_notes}'"
 
 # Completion
 if [ "${DRY_RUN}" = "true" ]; then

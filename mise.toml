@@ -1,0 +1,96 @@
+[tools]
+erlang = ["28", "27"]
+rebar = "3.27.0"
+actionlint = "latest"
+gh = "latest"
+git-cliff = "latest"
+glow = "latest"
+markdownlint-cli2 = "latest"
+shellcheck = "latest"
+shfmt = "latest"
+yamllint = "latest"
+"ubi:whatsapp/erlang-language-platform" = { version = "latest", exe = "elp" }
+
+[tasks.format]
+description = "Format all code"
+run = """
+rebar3 fmt
+mise fmt
+"""
+
+[tasks."verify:rebar"]
+description = "Run rebar3 verification checks"
+run = """
+rebar3 compile
+rebar3 plugins upgrade --all
+rebar3 fmt --check
+rebar3 lint
+rebar3 hank
+rebar3 as test dialyzer
+rebar3 as test xref
+rebar3 ex_doc
+"""
+
+[tasks."verify:elp"]
+description = "Run ELP checks"
+run = """
+elp lint
+elp eqwalize-all
+"""
+
+[tasks."verify:markdown"]
+description = "Lint Markdown files"
+run = 'markdownlint-cli2 "**/*.md" "!_build" "!test/fixtures" "!CHANGELOG.md"'
+
+[tasks."verify:yaml"]
+description = "Lint YAML files"
+run = "yamllint --strict -c .yamllint.yml ."
+
+[tasks."verify:shell"]
+description = "Lint shell scripts"
+run = [
+    "shellcheck -o all scripts/*.sh",
+    "shfmt --diff scripts/*.sh",
+]
+
+[tasks."verify:actions"]
+description = "Lint GitHub Actions workflows"
+run = "actionlint"
+
+[tasks.lint]
+description = "Run OTP-independent linters"
+depends = [
+  "verify:markdown",
+  "verify:yaml",
+  "verify:shell",
+  "verify:actions",
+]
+
+[tasks.verify]
+description = "Run all verification checks"
+depends = [
+  "verify:rebar",
+  "verify:elp",
+  "lint",
+]
+
+[tasks.docs]
+description = "Generate documentation"
+run = "rebar3 ex_doc"
+
+[tasks.test]
+description = "Run all tests"
+run = """
+rebar3 eunit
+rebar3 proper
+rebar3 ct
+rebar3 cover --precision 3
+"""
+
+[tasks.changelog]
+description = "Update the changelog"
+run = 'git-cliff --exclude-path="scripts/**"'
+
+[tasks.release]
+description = "Dry-run a release of the library"
+run = "scripts/release.sh"

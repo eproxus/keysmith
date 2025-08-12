@@ -41,6 +41,7 @@ uuid_format_test_() ->
 uuid_spec_invalid_test() ->
     ?assertError(
         {invalid_uuid_spec, unsupported},
+        % eqwalizer:fixme intentional bad input
         keysmith:uuid(unsupported)
     ).
 
@@ -48,6 +49,7 @@ uuid_spec_invalid_test() ->
 uuid_spec_format_test() ->
     ?assertError(
         {invalid_uuid_format, unsupported},
+        % eqwalizer:fixme intentional bad input
         keysmith:uuid(4, unsupported)
     ).
 
@@ -342,19 +344,23 @@ cb32_test_() ->
 
 -dialyzer({nowarn_function, parse_invalid_format_test/0}).
 parse_invalid_format_test() ->
+    % eqwalizer:fixme intentional bad input
     ?assertError({invalid_format, foo}, keysmith:parse(foo, <<"foo">>)).
 
 spec_valid_test_() ->
     {ok, JSON} = file:read_file("test/fixtures/type_id/spec/valid.json"),
-    IDs = json:decode(JSON),
+    IDs = [_ | _] = json:decode(JSON),
     [
         {Name, fun() ->
+            % eqwalizer:fixme json:decode_value() is binary here
             ExpectedUUID = keysmith:parse(uuid, UUID),
             ExpectedTypeID =
                 case Prefix of
                     ~"" -> {type_id, ExpectedUUID};
+                    % eqwalizer:fixme json:decode_value() is binary here
                     Prefix -> {type_id, binary_to_atom(Prefix), ExpectedUUID}
                 end,
+            % eqwalizer:fixme json:decode_value() is binary here
             ?assertEqual(ExpectedTypeID, keysmith:parse(type_id, ID)),
             ?assertEqual(UUID, keysmith:uuid(ExpectedUUID))
         end}
@@ -368,11 +374,12 @@ spec_valid_test_() ->
 
 spec_invalid_test_() ->
     {ok, JSON} = file:read_file("test/fixtures/type_id/spec/invalid.json"),
-    IDs = json:decode(JSON),
+    IDs = [_ | _] = json:decode(JSON),
     [
         {Desc,
             ?_assertError(
                 {invalid_id, type_id, ID},
+                % eqwalizer:fixme json:decode_value() is binary here
                 keysmith:parse(type_id, ID)
             )}
      || #{

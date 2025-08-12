@@ -5,6 +5,8 @@ rules:
     max: 80
   comments:
     min-spaces-from-content: 1
+  truthy:
+    check-keys: false
 ignore:
   - _build
   - test/fixtures/type_id/spec

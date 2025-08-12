@@ -1,0 +1,50 @@
+---
+name: CI
+
+on:
+  - push
+
+concurrency:
+  group: ${{github.workflow}}-${{github.ref}}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  lint:
+    name: Lint
+
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: jdx/mise-action@v3
+
+      - run: mise run --output=keep-order lint
+
+  test:
+    name: Erlang ${{matrix.erlang}}
+
+    runs-on: ubuntu-24.04
+
+    strategy:
+      matrix:
+        erlang: ["27", "28"]
+
+    env:
+      MISE_ERLANG_VERSION: ${{matrix.erlang}}
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: jdx/mise-action@v3
+
+      - uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+        with:
+          path: |
+            ~/.cache/rebar3
+            _build
+            !_build/test/logs
+          # yamllint disable-line rule:line-length
+          key: rebar3-${{runner.os}}_${{runner.arch}}-erlang-${{matrix.erlang}}-rebar-${{hashFiles('rebar.lock')}}
+
+      - run: mise run --output=keep-order verify:rebar verify:elp test
