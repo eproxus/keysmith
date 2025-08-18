@@ -31,7 +31,7 @@ jobs:
                 -hash-${{hashFiles('rebar.lock', 'rebar.config')}}"
 
       - name: Install dependencies
-        uses: jdx/mise-action@v2
+        uses: jdx/mise-action@v3
         with:
           mise_toml: |
             [tools]
