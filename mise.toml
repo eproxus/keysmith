@@ -1,6 +1,6 @@
 [tools]
 erlang = ["28", "27"]
-rebar = "3.27.0"
+rebar = "3.27.1"
 actionlint = "latest"
 gh = "latest"
 git-cliff = "latest"
