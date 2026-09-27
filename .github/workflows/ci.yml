@@ -45,6 +45,6 @@ jobs:
             _build
             !_build/test/logs
           # yamllint disable-line rule:line-length
-          key: rebar3-${{runner.os}}_${{runner.arch}}-erlang-${{matrix.erlang}}-rebar-${{hashFiles('rebar.lock')}}
+          key: rebar3-${{runner.os}}_${{runner.arch}}-erlang-${{matrix.erlang}}-rebar-${{hashFiles('rebar.config', 'rebar.lock')}}
 
       - run: mise run --output=keep-order verify:rebar verify:elp test

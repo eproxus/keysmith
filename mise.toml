@@ -29,6 +29,7 @@ rebar3 hank
 rebar3 as test dialyzer
 rebar3 as test xref
 rebar3 ex_doc
+rebar3 hex build
 """
 
 [tasks."verify:elp"]
